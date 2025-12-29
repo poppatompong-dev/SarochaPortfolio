@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แฟ้มสะสมผลงาน - สโรชา เฮงสุวรรณ (Full CRUD Firebase & Unified UI)</title>
+    <title>แฟ้มสะสมผลงาน - สโรชา เฮงสุวรรณ (PDF A4 Optimized)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Plugin สำหรับแสดงตัวเลขและเปอร์เซ็นต์บนกราฟ -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Unifying Font Type across the entire web */
-        body, h1, h2, h3, h4, h5, h6, input, textarea, button { 
+        /* กำหนดฟอนต์ Kanit ทั้งระบบ */
+        body, h1, h2, h3, h4, h5, h6, input, textarea, button, p, span { 
             font-family: 'Kanit', sans-serif !important; 
         }
 
@@ -25,7 +24,6 @@
             margin-left: auto;
             margin-right: auto;
             height: 320px;
-            max-height: 400px;
         }
 
         .card-hover { transition: all 0.3s ease; }
@@ -34,11 +32,39 @@
         .process-dot { width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; position: relative; z-index: 10; }
         .process-line-v { width: 2px; background: #e2e8f0; position: absolute; top: 0; bottom: 0; left: 5px; z-index: 0; }
 
+        /* --- PRINT OPTIMIZATION (A4 PDF) --- */
         @media print {
+            @page { 
+                size: A4; 
+                margin: 15mm; 
+            }
             .no-print { display: none !important; }
-            body { background-color: white !important; padding: 0 !important; }
-            .card-hover { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
-            header { background: #002D62 !important; color: white !important; }
+            body { background-color: white !important; padding: 0 !important; color: black !important; }
+            main { margin-top: 0 !important; padding: 0 !important; width: 100% !important; }
+            section { 
+                page-break-inside: avoid; 
+                margin-bottom: 20px !important; 
+                border: 1px solid #e2e8f0 !important; 
+                box-shadow: none !important;
+            }
+            header { 
+                background: #002D62 !important; 
+                color: white !important; 
+                border-radius: 0 !important;
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+                -webkit-print-color-adjust: exact;
+            }
+            .chart-container { height: 280px !important; }
+            .process-line-v { background: #cbd5e1 !important; }
+            /* ปรับแต่งให้รูปโปรไฟล์พิมพ์ออกมาสวยงาม */
+            #profileImg { border: 4px solid white !important; }
+            /* ปรับ Layout ให้เป็นระเบียบในกระดาษ */
+            .grid { display: block !important; }
+            .md\:grid-cols-3, .lg\:grid-cols-2 { display: flex !important; flex-wrap: wrap !important; }
+            .md\:col-span-2 { width: 65% !important; }
+            .md\:justify-end { width: 35% !important; }
+            .lg\:grid-cols-2 > div { width: 48% !important; margin: 1% !important; }
         }
 
         #adminPanelContent::-webkit-scrollbar { width: 6px; }
@@ -47,7 +73,7 @@
 </head>
 <body class="overflow-x-hidden">
 
-    <!-- แถบนำทาง -->
+    <!-- NAVIGATION (ซ่อนตอนพิมพ์) -->
     <nav class="no-print sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-3">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
@@ -55,22 +81,22 @@
                 <div id="navTitle" class="font-bold text-blue-900 tracking-tight uppercase">SAROCHA.PORTFOLIO</div>
             </div>
             <div class="flex gap-2">
-                <button onclick="window.print()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-full font-bold hover:bg-slate-200 transition text-sm flex items-center gap-2">
-                    🖨️ พิมพ์ PDF
+                <button onclick="window.print()" class="bg-blue-900 text-white px-5 py-2 rounded-full font-bold hover:bg-blue-800 transition text-sm flex items-center gap-2 shadow-lg">
+                    📥 ดาวน์โหลด PDF (A4)
                 </button>
-                <button id="adminBtn" onclick="toggleAdminPanel()" class="bg-amber-500 text-white px-4 py-2 rounded-full font-bold hover:bg-amber-600 transition text-sm flex items-center gap-2 shadow-lg shadow-amber-500/30">
+                <button id="adminBtn" onclick="toggleAdminPanel()" class="bg-amber-500 text-white px-4 py-2 rounded-full font-bold hover:bg-amber-600 transition text-sm flex items-center gap-2 shadow-lg">
                     ⚙️ จัดการข้อมูล CRUD
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- ส่วนหัว (Hero) -->
+    <!-- HEADER SECTION -->
     <header class="bg-[#002D62] text-white pt-20 pb-28 px-6 relative overflow-hidden shadow-2xl">
         <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 items-center relative z-10">
             <div class="md:col-span-2 space-y-6 text-center md:text-left">
                 <div id="positionLabel" class="inline-flex items-center gap-2 px-4 py-1.5 bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded-full border border-cyan-500/30 tracking-wider uppercase">
-                    <span class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+                    <span class="no-print w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
                     นักประชาสัมพันธ์ปฏิบัติการ (อปท. ยุคใหม่)
                 </div>
                 <h1 id="userNameDisplay" class="text-5xl md:text-7xl font-extrabold leading-tight tracking-tighter">
@@ -79,15 +105,15 @@
                 <h2 id="sloganDisplay" class="text-2xl md:text-3xl text-amber-400 font-light italic">
                     "นักสื่อสารรุ่นใหม่ หัวใจบริการประชาชน"
                 </h2>
-                <div class="flex flex-wrap gap-4 mt-8 justify-center md:justify-start no-print">
-                    <div class="flex items-center bg-white/5 hover:bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-xl border border-white/10 transition">
+                <div class="flex flex-wrap gap-4 mt-8 justify-center md:justify-start">
+                    <div class="flex items-center bg-white/5 px-5 py-3 rounded-2xl border border-white/10">
                         <span class="text-xl mr-3">📞</span>
                         <div class="text-left">
                             <p class="text-[10px] text-white/50 uppercase">Phone</p>
                             <p id="phoneDisplay" class="font-bold text-sm">084-050-3121</p>
                         </div>
                     </div>
-                    <div class="flex items-center bg-white/5 hover:bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-xl border border-white/10 transition">
+                    <div class="flex items-center bg-white/5 px-5 py-3 rounded-2xl border border-white/10">
                         <span class="text-xl mr-3">📧</span>
                         <div class="text-left">
                             <p class="text-[10px] text-white/50 uppercase">Email</p>
@@ -98,22 +124,21 @@
             </div>
             
             <div class="flex justify-center md:justify-end">
-                <div class="w-72 h-96 rounded-[2.5rem] border-[12px] border-white/10 shadow-2xl overflow-hidden bg-slate-800 relative group">
+                <div class="w-64 h-80 rounded-3xl border-[10px] border-white/10 shadow-2xl overflow-hidden bg-slate-800">
                     <img id="profileImg" src="https://img5.pic.in.th/file/secure-sv1/Gemini_Generated_Image_5nz7zj5nz7zj5nz7.png" 
                          alt="สโรชา เฮงสุวรรณ" 
-                         onerror="this.src='https://ui-avatars.com/api/?name=Sarocha+H&size=512&background=002D62&color=fff'"
-                         class="w-full h-full object-cover object-top transition duration-700 group-hover:scale-110">
+                         class="w-full h-full object-cover object-top">
                 </div>
             </div>
         </div>
-        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] -mr-64 -mt-64"></div>
+        <div class="no-print absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] -mr-64 -mt-64"></div>
     </header>
 
-    <!-- เนื้อหาหลัก -->
+    <!-- MAIN CONTENT -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20 space-y-12 pb-24">
 
-        <!-- แนวคิดหลัก -->
-        <section class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12 card-hover border-t-8 border-blue-900">
+        <!-- CONCEPT SECTION -->
+        <section class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12 border-t-8 border-blue-900">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
                 <div class="lg:col-span-1">
                     <h3 class="text-3xl font-bold text-blue-900 mb-4 border-l-4 border-blue-900 pl-4">แนวคิด "ล่ามภาษารัฐ"</h3>
@@ -132,146 +157,158 @@
             </div>
         </section>
 
-        <!-- การศึกษา -->
-        <section class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12 card-hover border-l-8 border-blue-900 overflow-hidden relative">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full opacity-50 z-0"></div>
-            <div class="relative z-10">
-                <h3 class="text-3xl font-bold text-blue-900 mb-8 border-l-4 border-amber-500 pl-4">ประวัติการศึกษาและผลการเรียน</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <!-- EDUCATION SECTION -->
+        <section class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12 border-l-8 border-blue-900 overflow-hidden relative">
+            <h3 class="text-3xl font-bold text-blue-900 mb-8 border-l-4 border-amber-500 pl-4">ประวัติการศึกษาและผลการเรียน</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div class="flex items-start gap-6">
+                    <div class="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center text-white text-2xl shrink-0 shadow-lg">-🎓-</div>
                     <div>
-                        <div class="flex items-start gap-6">
-                            <div class="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center text-white text-2xl shrink-0 shadow-lg">🎓</div>
-                            <div>
-                                <h4 id="degreeDisplay" class="text-xl font-bold text-blue-900">ปริญญาตรี นิเทศศาสตรบัณฑิต</h4>
-                                <p id="universityDisplay" class="text-lg text-slate-600 font-medium">มหาวิทยาลัยเทคโนโลยีราชมงคลพระนคร</p>
-                                <div class="mt-6 inline-flex items-center gap-4 bg-amber-50 px-6 py-3 rounded-2xl border border-amber-100">
-                                    <div class="text-center">
-                                        <p class="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">Grade Point Average</p>
-                                        <p id="gpaDisplay" class="text-3xl font-black text-blue-900">3.85</p>
-                                    </div>
-                                    <div class="w-[1px] h-10 bg-amber-200"></div>
-                                    <div id="honorDisplay" class="text-slate-600 text-sm font-bold">เกียรตินิยมอันดับ 1</div>
-                                </div>
+                        <h4 id="degreeDisplay" class="text-xl font-bold text-blue-900">ปริญญาตรี นิเทศศาสตรบัณฑิต</h4>
+                        <p id="universityDisplay" class="text-lg text-slate-600 font-medium">มหาวิทยาลัยเทคโนโลยีราชมงคลพระนคร</p>
+                        <div class="mt-6 inline-flex items-center gap-4 bg-amber-50 px-6 py-3 rounded-2xl border border-amber-100">
+                            <div class="text-center">
+                                <p class="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">Grade Point Average</p>
+                                <p id="gpaDisplay" class="text-3xl font-black text-blue-900">3.85</p>
                             </div>
+                            <div class="w-[1px] h-10 bg-amber-200"></div>
+                            <div id="honorDisplay" class="text-slate-600 text-sm font-bold uppercase">เกียรตินิยมอันดับ 1</div>
                         </div>
                     </div>
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                        <h5 class="font-bold text-blue-900 mb-4 flex items-center gap-2">
-                            <span class="w-2 h-2 bg-amber-500 rounded-full"></span> รายวิชาเด่นที่เกี่ยวข้อง
-                        </h5>
-                        <div id="coursesList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <!-- จะเติมโดย JS -->
-                        </div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <h5 class="font-bold text-blue-900 mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-amber-500 rounded-full"></span> รายวิชาเด่นที่เกี่ยวข้อง
+                    </h5>
+                    <div id="coursesList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- รายการวิชา -->
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- สรุปทักษะและสัดส่วนเนื้อหา -->
+        <!-- DASHBOARD SECTION -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-white rounded-[2rem] shadow-xl p-8 card-hover border-b-8 border-cyan-500">
-                <h3 class="text-2xl font-bold text-blue-900 border-l-4 border-cyan-500 pl-4 mb-8">สมรรถนะเชิงวิชาชีพ</h3>
+            <div class="bg-white rounded-[2rem] shadow-xl p-8 border-b-8 border-cyan-500">
+                <h3 class="text-2xl font-bold text-blue-900 border-l-4 border-cyan-500 pl-4 mb-8 uppercase tracking-tight">สมรรถนะเชิงวิชาชีพ (RADAR)</h3>
                 <div class="chart-container">
                     <canvas id="skillsRadarChart"></canvas>
                 </div>
             </div>
 
-            <div class="bg-white rounded-[2rem] shadow-xl p-8 card-hover border-b-8 border-blue-900">
-                <h3 class="text-2xl font-bold text-blue-900 border-l-4 border-blue-900 pl-4 mb-8">สัดส่วนเนื้อหาในแฟ้มสะสมผลงาน</h3>
+            <div class="bg-white rounded-[2rem] shadow-xl p-8 border-b-8 border-blue-900">
+                <h3 class="text-2xl font-bold text-blue-900 border-l-4 border-blue-900 pl-4 mb-8 uppercase tracking-tight">สัดส่วนเนื้อหาผลงาน (MIX)</h3>
                 <div class="chart-container">
                     <canvas id="portfolioPieChart"></canvas>
                 </div>
-                <div class="mt-4 text-center">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Portfolio Distribution Analysis (%)</p>
-                </div>
             </div>
         </section>
 
-        <!-- แผนงานและ QR Code -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-white rounded-[2rem] shadow-xl p-8 card-hover border-t-8 border-amber-500">
-                <h3 class="text-2xl font-bold text-blue-900 border-l-4 border-amber-500 pl-4 mb-8">ซอฟต์แวร์ที่เชี่ยวชาญ</h3>
-                <div id="softwareList" class="flex flex-wrap gap-3">
-                    <!-- จะเติมโดย JS -->
+        <!-- KPIs SECTION (ปรับปรุงคำอธิบาย 98%) -->
+        <section class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12 border-t-8 border-amber-500">
+            <h3 class="text-3xl font-bold text-blue-900 border-l-4 border-amber-500 pl-4 mb-10">ตัวชี้วัดผลสัมฤทธิ์ (KPIs)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- KPI 1: Accuracy -->
+                <div class="flex flex-col md:flex-row items-center gap-8 p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                    <div class="relative w-40 h-40 flex items-center justify-center shrink-0">
+                        <div class="absolute inset-0 border-[12px] border-slate-200 rounded-full"></div>
+                        <div id="kpi1Gauge" class="absolute inset-0 border-[12px] border-blue-900 rounded-full transition-all duration-1000" style="clip-path: inset(0 0 0 0);"></div>
+                        <div class="z-10 text-center">
+                            <span id="kpi1Val" class="text-4xl font-extrabold text-blue-900">98%</span>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">Accuracy</p>
+                        </div>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h4 id="kpi1Label" class="text-xl font-bold text-blue-900 uppercase">ความถูกต้องของข้อมูล</h4>
+                        <p id="kpi1Desc" class="text-sm text-slate-600 mt-3 leading-relaxed">
+                            ทุกชิ้นงานประชาสัมพันธ์ต้องผ่านกระบวนการตรวจสอบ (Fact-Check) เพื่อให้ข้อมูลที่ส่งถึงประชาชนมีค่าความผิดพลาดเป็นศูนย์ (Zero-Error) ป้องกันความสับสนและรักษาภาพลักษณ์ที่น่าเชื่อถือของรัฐบาลท้องถิ่น
+                        </p>
+                    </div>
                 </div>
-                <div class="mt-12">
-                    <h3 class="text-xl font-bold text-blue-900 mb-6">ตัวชี้วัดผลสัมฤทธิ์ (KPIs)</h3>
-                    <div class="grid grid-cols-2 gap-8">
-                        <div class="text-center">
-                            <div class="relative w-32 h-32 mx-auto flex items-center justify-center mb-2">
-                                <div class="absolute inset-0 border-[10px] border-slate-100 rounded-full"></div>
-                                <div id="kpi1Gauge" class="absolute inset-0 border-[10px] border-blue-900 rounded-full transition-all duration-1000" style="clip-path: inset(0 0 0 0);"></div>
-                                <span id="kpi1Val" class="text-2xl font-extrabold text-blue-900">98%</span>
-                            </div>
-                            <p class="text-xs font-bold text-slate-500 uppercase">ความถูกต้อง</p>
+                <!-- KPI 2: Outreach -->
+                <div class="flex flex-col md:flex-row items-center gap-8 p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                    <div class="relative w-40 h-40 flex items-center justify-center shrink-0">
+                        <div class="absolute inset-0 border-[12px] border-slate-200 rounded-full"></div>
+                        <div id="kpi2Gauge" class="absolute inset-0 border-[12px] border-cyan-500 rounded-full transition-all duration-1000" style="clip-path: inset(0 0 0 0);"></div>
+                        <div class="z-10 text-center">
+                            <span id="kpi2Val" class="text-4xl font-extrabold text-cyan-600">92%</span>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">Reach</p>
                         </div>
-                        <div class="text-center">
-                            <div class="relative w-32 h-32 mx-auto flex items-center justify-center mb-2">
-                                <div class="absolute inset-0 border-[10px] border-slate-100 rounded-full"></div>
-                                <div id="kpi2Gauge" class="absolute inset-0 border-[10px] border-cyan-500 rounded-full transition-all duration-1000" style="clip-path: inset(0 0 0 0);"></div>
-                                <span id="kpi2Val" class="text-2xl font-extrabold text-cyan-600">92%</span>
-                            </div>
-                            <p class="text-xs font-bold text-slate-500 uppercase">การเข้าถึง</p>
-                        </div>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h4 id="kpi2Label" class="text-xl font-bold text-cyan-700 uppercase">การเข้าถึงและสร้างการรับรู้</h4>
+                        <p id="kpi2Desc" class="text-sm text-slate-600 mt-3 leading-relaxed">
+                            อัตราการตอบรับจากประชาชนที่สามารถเข้าถึงข้อมูลบริการสาธารณะได้รวดเร็วขึ้นผ่านแพลตฟอร์มดิจิทัล ช่วยลดภาระการเดินทางมาติดต่อหน่วยงานโดยไม่จำเป็น
+                        </p>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- ส่วน QR Code -->
-            <div class="bg-white rounded-[2rem] shadow-xl p-8 card-hover border-t-8 border-blue-900 flex flex-col items-center justify-center text-center">
-                <h3 class="text-2xl font-bold text-blue-900 mb-6 border-b-2 border-blue-100 pb-2">สแกนเพื่อเข้าถึงลิงก์ผลงาน</h3>
-                <div id="qrContainer" class="p-6 bg-slate-50 rounded-[2.5rem] border-4 border-dashed border-blue-200 hover:border-blue-400 transition-colors">
+        <!-- QR CODE & SOFTWARE -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-[2rem] shadow-xl p-8 border-t-8 border-blue-900 flex flex-col items-center justify-center text-center">
+                <h3 class="text-2xl font-bold text-blue-900 mb-6">สแกนชมผลงานต้นฉบับ</h3>
+                <div id="qrContainer" class="p-6 bg-white rounded-[2.5rem] border-4 border-dashed border-blue-200 shadow-inner">
                     <img id="qrImg" src="https://img5.pic.in.th/file/secure-sv1/ng5806.png" 
                          alt="Scan for Portfolio" 
-                         class="w-56 h-56 mx-auto shadow-sm rounded-xl">
+                         class="w-48 h-48 mx-auto rounded-xl">
                 </div>
-                <p class="text-xs text-slate-500 mt-6 max-w-[280px] leading-relaxed">
-                    สแกน QR Code นี้เพื่อเข้าชมเอกสารประกอบผลงาน <br>
-                    และไฟล์นโยบายฉบับเต็มใน <strong>Google Drive / Canva</strong>
-                </p>
+                <p class="text-xs text-slate-500 mt-6 max-w-[280px]">คณะกรรมการสามารถสแกน QR Code เพื่อเข้าชมวิดีโอ คลิปงานนโยบาย และเอกสารประชาสัมพันธ์ฉบับเต็ม</p>
+            </div>
+
+            <div class="bg-white rounded-[2rem] shadow-xl p-8 border-t-8 border-amber-500">
+                <h3 class="text-2xl font-bold text-blue-900 border-l-4 border-amber-500 pl-4 mb-8 uppercase tracking-tight">ซอฟต์แวร์ที่เชี่ยวชาญ</h3>
+                <div id="softwareList" class="flex flex-wrap gap-3">
+                    <!-- รายชื่อซอฟต์แวร์ -->
+                </div>
+                <div class="mt-12 p-6 bg-blue-900 rounded-[2rem] text-white">
+                    <h5 class="font-bold mb-2">💡 ทักษะเพิ่มเติม</h5>
+                    <p class="text-xs text-blue-100 leading-relaxed italic">"มีความสามารถในการใช้ AI Generative Tools เพื่อเพิ่มประสิทธิภาพความเร็วในการผลิตสื่อประชาสัมพันธ์ภาครัฐให้ทันต่อสถานการณ์"</p>
+                </div>
             </div>
         </section>
 
-        <!-- แผนปฏิบัติงาน 100 วัน -->
+        <!-- 100-DAY PLAN -->
         <section class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12">
-            <h3 class="text-3xl font-bold text-blue-900 text-center mb-12">แผนปฏิบัติงาน 100 วันแรก</h3>
+            <h3 class="text-3xl font-bold text-blue-900 text-center mb-12 uppercase tracking-widest">แผนปฏิบัติงาน 100 วันแรก</h3>
             <div class="relative max-w-5xl mx-auto pl-8">
                 <div class="process-line-v"></div>
                 <div id="planContainer" class="space-y-12">
-                    <!-- จะเติมโดย JS -->
+                    <!-- รายการแผนงาน -->
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- ส่วนท้าย -->
-    <footer class="bg-white border-t border-slate-200 py-16 px-6 text-center no-print">
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-16 px-6 text-center">
         <div class="max-w-4xl mx-auto">
-            <h2 id="footerName" class="text-3xl font-bold text-blue-900 mb-4 tracking-tighter">สโรชา เฮงสุวรรณ</h2>
-            <p class="text-slate-500 mb-10 max-w-lg mx-auto italic leading-relaxed">
+            <h2 id="footerName" class="text-3xl font-bold text-blue-900 mb-4 uppercase tracking-tighter">สโรชา เฮงสุวรรณ</h2>
+            <p id="footerQuote" class="text-slate-500 mb-10 max-w-lg mx-auto italic leading-relaxed">
                 "เพราะหัวใจของงานประชาสัมพันธ์ คือการสร้างความเชื่อมั่นให้ประชาชนได้รับสิทธิและบริการอย่างเท่าเทียม"
             </p>
-            <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">© 2025 Sarocha Hengsuwan • Interactive QR Portfolio</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">© 2025 Sarocha Hengsuwan • Optimized for A4 Printing</p>
         </div>
     </footer>
 
-    <!-- แผงจัดการข้อมูล CRUD (Overlay) -->
+    <!-- ADMIN PANEL OVERLAY (ซ่อนตอนพิมพ์) -->
     <div id="adminPanel" class="fixed inset-0 bg-slate-900/90 z-[100] hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white rounded-[2.5rem] w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative">
             <div class="flex justify-between items-center p-8 border-b">
                 <div>
-                    <h3 class="text-3xl font-bold text-blue-900">แผงจัดการข้อมูล CRUD (Full Edit)</h3>
-                    <p class="text-xs text-slate-400 mt-1 uppercase font-bold tracking-widest">Update every single section via Firebase</p>
+                    <h3 class="text-3xl font-bold text-blue-900 font-kanit">แผงจัดการข้อมูล CRUD</h3>
+                    <p class="text-xs text-slate-400 mt-1 uppercase font-bold tracking-widest font-kanit">FULL CONTENT CONTROL</p>
                 </div>
                 <button onclick="toggleAdminPanel()" class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition">✖️</button>
             </div>
             
-            <div id="adminPanelContent" class="flex-1 overflow-y-auto p-10 space-y-10">
+            <div id="adminPanelContent" class="flex-1 overflow-y-auto p-10 space-y-10 font-kanit">
                 
                 <!-- 1. ข้อมูลส่วนตัว -->
                 <div class="space-y-4">
-                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">1. ข้อมูลพื้นฐานและรูปภาพ</h4>
+                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">1. ข้อมูลส่วนตัวและรูปภาพ</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">ชื่อ-นามสกุล</label><input id="inName" type="text" class="w-full border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"></div>
                         <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">ตำแหน่ง</label><input id="inPos" type="text" class="w-full border p-3 rounded-xl"></div>
@@ -283,75 +320,42 @@
                     </div>
                 </div>
 
-                <!-- 2. แนวคิดล่ามภาษารัฐ -->
+                <!-- 2. กราฟและ KPIs CRUD -->
                 <div class="space-y-4">
-                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">2. แนวคิดล่ามภาษารัฐ</h4>
-                    <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">ข้อความเน้น (Italic)</label><input id="inConceptSub" type="text" class="w-full border p-3 rounded-xl"></div>
-                    <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">เนื้อหาหลัก</label><textarea id="inConceptMain" rows="3" class="w-full border p-3 rounded-xl"></textarea></div>
+                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">2. ปรับแต่ง KPIs และคำอธิบาย</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-blue-50 p-4 rounded-2xl border">
+                            <label class="block text-[10px] font-bold text-blue-900 mb-1 uppercase font-kanit">KPI 1 (98%)</label>
+                            <input id="ik1L" type="text" class="w-full border p-2 rounded-lg mb-2 font-bold font-kanit" placeholder="หัวข้อ">
+                            <input id="ik1" type="number" class="w-full border p-2 rounded-lg mb-2 font-kanit" placeholder="ค่า (%)">
+                            <textarea id="ik1D" rows="3" class="w-full border p-2 rounded-lg text-xs font-kanit" placeholder="คำอธิบายรายละเอียด"></textarea>
+                        </div>
+                        <div class="bg-cyan-50 p-4 rounded-2xl border">
+                            <label class="block text-[10px] font-bold text-cyan-900 mb-1 uppercase font-kanit">KPI 2 (92%)</label>
+                            <input id="ik2L" type="text" class="w-full border p-2 rounded-lg mb-2 font-bold font-kanit" placeholder="หัวข้อ">
+                            <input id="ik2" type="number" class="w-full border p-2 rounded-lg mb-2 font-kanit" placeholder="ค่า (%)">
+                            <textarea id="ik2D" rows="3" class="w-full border p-2 rounded-lg text-xs font-kanit" placeholder="คำอธิบายรายละเอียด"></textarea>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 3. การศึกษา -->
+                <!-- 3. Pie Chart -->
                 <div class="space-y-4">
-                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">3. ประวัติการศึกษา</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">วุฒิการศึกษา</label><input id="inDegree" type="text" class="w-full border p-3 rounded-xl"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">มหาวิทยาลัย</label><input id="inUniv" type="text" class="w-full border p-3 rounded-xl"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">เกรดเฉลี่ย (GPA)</label><input id="inGpa" type="text" class="w-full border p-3 rounded-xl"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">รางวัล/เกียรตินิยม</label><input id="inHonor" type="text" class="w-full border p-3 rounded-xl"></div>
-                    </div>
-                    <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">รายวิชาเด่น (คั่นด้วยคอมม่า ,)</label><textarea id="inCourses" rows="2" class="w-full border p-3 rounded-xl"></textarea></div>
-                </div>
-
-                <!-- 4. กราฟและซอฟต์แวร์ -->
-                <div class="space-y-4">
-                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">4. กราฟทักษะ, KPI และซอฟต์แวร์</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">เขียนข่าว (%)</label><input id="sk1" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">อินโฟ (%)</label><input id="sk2" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">โซเชียล (%)</label><input id="sk3" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">วิกฤต (%)</label><input id="sk4" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">สรุปงาน (%)</label><input id="sk5" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">จริยธรรม (%)</label><input id="sk6" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">KPI1 ความถูกต้อง</label><input id="ik1" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">KPI2 การเข้าถึง</label><input id="ik2" type="number" class="w-full border p-2 rounded-lg"></div>
-                    </div>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Pie1 ข่าวสาร</label><input id="pie1" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Pie2 อินโฟ</label><input id="pie2" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Pie3 มัลติมีเดีย</label><input id="pie3" type="number" class="w-full border p-2 rounded-lg"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Pie4 บริหาร</label><input id="pie4" type="number" class="w-full border p-2 rounded-lg"></div>
-                    </div>
-                    <div><label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">รายชื่อซอฟต์แวร์ (คั่นด้วยคอมม่า ,)</label><input id="inSoftware" type="text" class="w-full border p-3 rounded-xl"></div>
-                </div>
-
-                <!-- 5. แผนงาน 100 วัน -->
-                <div class="space-y-4">
-                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">5. แผนปฏิบัติงาน 100 วันแรก</h4>
-                    <div class="space-y-6">
-                        <div class="p-4 bg-slate-50 rounded-2xl border">
-                            <label class="block text-[8px] font-bold text-blue-600 mb-1 uppercase">ระยะที่ 1</label>
-                            <input id="plan1T" type="text" class="w-full border p-2 rounded mb-2 font-bold" placeholder="หัวข้อ">
-                            <textarea id="plan1D" rows="2" class="w-full border p-2 rounded text-sm" placeholder="รายละเอียด"></textarea>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-2xl border">
-                            <label class="block text-[8px] font-bold text-blue-600 mb-1 uppercase">ระยะที่ 2</label>
-                            <input id="plan2T" type="text" class="w-full border p-2 rounded mb-2 font-bold" placeholder="หัวข้อ">
-                            <textarea id="plan2D" rows="2" class="w-full border p-2 rounded text-sm" placeholder="รายละเอียด"></textarea>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-2xl border">
-                            <label class="block text-[8px] font-bold text-blue-600 mb-1 uppercase">ระยะที่ 3</label>
-                            <input id="plan3T" type="text" class="w-full border p-2 rounded mb-2 font-bold" placeholder="หัวข้อ">
-                            <textarea id="plan3D" rows="2" class="w-full border p-2 rounded text-sm" placeholder="รายละเอียด"></textarea>
-                        </div>
+                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">3. สัดส่วนเนื้อหาผลงาน (Pie Chart)</h4>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div><label class="block text-[8px] font-bold text-slate-400 mb-1 uppercase">ข่าวประชาสัมพันธ์ (%)</label><input id="pie1" type="number" class="w-full border p-2 rounded-lg"></div>
+                        <div><label class="block text-[8px] font-bold text-slate-400 mb-1 uppercase">อินโฟกราฟิก (%)</label><input id="pie2" type="number" class="w-full border p-2 rounded-lg"></div>
+                        <div><label class="block text-[8px] font-bold text-slate-400 mb-1 uppercase">สื่อมัลติมีเดีย (%)</label><input id="pie3" type="number" class="w-full border p-2 rounded-lg"></div>
+                        <div><label class="block text-[8px] font-bold text-slate-400 mb-1 uppercase">งานสนับสนุน (%)</label><input id="pie4" type="number" class="w-full border p-2 rounded-lg"></div>
                     </div>
                 </div>
 
             </div>
 
-            <div class="p-8 border-t bg-slate-50">
+            <div class="p-8 border-t bg-slate-50 no-print">
                 <div id="saveStatus" class="text-center text-sm font-bold py-2 min-h-[2rem]"></div>
-                <button onclick="saveAdminData()" class="w-full bg-blue-900 text-white py-5 rounded-2xl font-bold hover:bg-blue-800 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
-                    💾 บันทึกและซิงค์ข้อมูลลง Firebase ทุกหัวข้อ
+                <button onclick="saveAdminData()" class="w-full bg-blue-900 text-white py-5 rounded-2xl font-bold hover:bg-blue-800 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 font-kanit">
+                    💾 ยืนยันการอัปเดตข้อมูลและซิงค์ลง Firebase
                 </button>
             </div>
         </div>
@@ -360,7 +364,7 @@
     <!-- Firebase & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         // Obfuscated API Key for GitHub Security
@@ -384,25 +388,7 @@
         let skillsChart, pieChart;
         let currentUser = null;
 
-        // Register Chart Labels Plugin
         Chart.register(ChartDataLabels);
-
-        function formatLabel(str, maxwidth) {
-            const sections = [];
-            const words = str.split(" ");
-            let temp = "";
-            words.forEach((item, index) => {
-                if (temp.length > 0) {
-                    const concat = temp + " " + item;
-                    if (concat.length > maxwidth) {
-                        sections.push(temp);
-                        temp = item;
-                    } else { temp = concat; }
-                } else { temp = item; }
-                if (index === words.length - 1) sections.push(temp);
-            });
-            return sections;
-        }
 
         async function init() {
             try {
@@ -445,7 +431,8 @@
                 },
                 mindset: {
                     sub: "\"งานประชาสัมพันธ์ไม่ใช่แค่การพูดให้ดัง แต่คือการพูดให้คนเข้าใจ...\"",
-                    main: "เปลี่ยนข้อกฎหมายหรือนโยบายที่ซับซ้อน ให้กลายเป็นภาษาชาวบ้านที่เข้าใจง่าย โดยที่ใจความสำคัญยังถูกต้องครบถ้วน เพื่อให้ประชาชนใช้บริการของรัฐได้อย่างมั่นใจ"
+                    main: "เปลี่ยนข้อกฎหมายหรือนโยบายที่ซับซ้อน ให้กลายเป็นภาษาชาวบ้านที่เข้าใจง่าย โดยที่ใจความสำคัญยังถูกต้องครบถ้วน เพื่อให้ประชาชนใช้บริการของรัฐได้อย่างมั่นใจ",
+                    footer: "เพราะหัวใจของงานประชาสัมพันธ์ คือการสร้างความเชื่อมั่นให้ประชาชนได้รับสิทธิและบริการอย่างเท่าเทียม"
                 },
                 education: {
                     univ: "มหาวิทยาลัยเทคโนโลยีราชมงคลพระนคร",
@@ -456,12 +443,13 @@
                 },
                 dashboard: {
                     skills: [75, 80, 85, 90, 85, 95],
-                    kpis: [98, 92],
+                    kpi1: { val: 98, label: "ความถูกต้องของข้อมูล (Accuracy)", desc: "ทุกชิ้นงานประชาสัมพันธ์ต้องผ่านกระบวนการตรวจสอบ (Fact-Check) เพื่อให้ข้อมูลที่ส่งถึงประชาชนมีค่าความผิดพลาดเป็นศูนย์ (Zero-Error) ป้องกันความสับสนและรักษาภาพลักษณ์ที่น่าเชื่อถือของรัฐบาลท้องถิ่น" },
+                    kpi2: { val: 92, label: "การเข้าถึงประชาชน (Public Outreach)", desc: "อัตราความเข้าใจสื่อที่นำเสนอผ่านช่องทางออนไลน์ของ อปท. ที่ประชาชนสามารถย่อยข้อมูลได้ทันทีผ่านอินโฟกราฟิกและสื่อดิจิทัลสมัยใหม่" },
                     pie: [40, 30, 20, 10],
-                    software: ["Canva", "CapCut", "AI Prompt", "Facebook Meta Suite", "E-Sarabun"]
+                    software: ["Canva", "CapCut", "AI Prompt", "Meta Suite", "E-Sarabun"]
                 },
                 plan: [
-                    { title: "ระยะที่ 1: วิเคราะห์และจัดฐานข้อมูล (Day 1-30)", desc: "สำรวจจุดบอดของการสื่อสารในพื้นที่ คัดกรองข้อมูลบริการสาธารณะที่ประชาชนสอบถามบ่อยที่สุด เพื่อจัดลำดับความสำคัญในการผลิตสื่อ" },
+                    { title: "ระยะที่ 1: วิเคราะห์และจัดฐานข้อมูล (Day 1-30)", desc: "สำรวจจุดบอดของการสื่อสารในพื้นที่ คัดกรองข้อมูลบริการสาธารณะที่ประชาชนสอบถามบ่อยที่สุด" },
                     { title: "ระยะที่ 2: ปฏิรูปสื่ออินโฟกราฟิก (Day 31-70)", desc: "ผลิตสื่ออินโฟกราฟิก 15 ชุดแรก ครอบคลุมงานบริการหลักของ อปท. เน้นภาษาที่ชาวบ้านเข้าใจง่าย" },
                     { title: "ระยะที่ 3: วัดผลและขยายผล (Day 71-100)", desc: "สรุปรายงานตัวชี้วัดความพึงพอใจ และปรับกลยุทธ์การสื่อสารเชิงรุกผ่าน LINE OA" }
                 ]
@@ -484,6 +472,7 @@
             const mindset = data.mindset || getDefaultData().mindset;
             document.getElementById('conceptSub').innerText = mindset.sub;
             document.getElementById('conceptMain').innerText = mindset.main;
+            document.getElementById('footerQuote').innerText = mindset.footer || mindset.sub;
 
             const edu = data.education || getDefaultData().education;
             document.getElementById('universityDisplay').innerText = edu.univ;
@@ -493,20 +482,28 @@
             const cList = document.getElementById('coursesList');
             cList.innerHTML = '';
             (edu.courses || []).forEach(c => {
-                cList.innerHTML += `<div class="bg-white p-3 rounded-xl shadow-sm text-xs font-bold text-slate-700 border border-slate-200">${c}</div>`;
+                cList.innerHTML += `<div class="bg-white p-3 rounded-xl shadow-sm text-xs font-bold text-slate-700 border border-slate-200 uppercase">${c}</div>`;
             });
 
             const dbd = data.dashboard || getDefaultData().dashboard;
             const swList = document.getElementById('softwareList');
             swList.innerHTML = '';
             (dbd.software || []).forEach(s => {
-                swList.innerHTML += `<span class="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-xs font-bold">${s}</span>`;
+                swList.innerHTML += `<span class="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-xs font-bold uppercase">${s}</span>`;
             });
 
-            document.getElementById('kpi1Val').innerText = (dbd.kpis[0] || 98) + '%';
-            document.getElementById('kpi2Val').innerText = (dbd.kpis[1] || 92) + '%';
-            document.getElementById('kpi1Gauge').style.background = `conic-gradient(#002D62 ${dbd.kpis[0]}%, transparent 0)`;
-            document.getElementById('kpi2Gauge').style.background = `conic-gradient(#06b6d4 ${dbd.kpis[1]}%, transparent 0)`;
+            // KPIs UI Update
+            const k1 = dbd.kpi1 || getDefaultData().dashboard.kpi1;
+            const k2 = dbd.kpi2 || getDefaultData().dashboard.kpi2;
+            document.getElementById('kpi1Val').innerText = k1.val + '%';
+            document.getElementById('kpi1Label').innerText = k1.label;
+            document.getElementById('kpi1Desc').innerText = k1.desc;
+            document.getElementById('kpi1Gauge').style.background = `conic-gradient(#002D62 ${k1.val}%, transparent 0)`;
+
+            document.getElementById('kpi2Val').innerText = k2.val + '%';
+            document.getElementById('kpi2Label').innerText = k2.label;
+            document.getElementById('kpi2Desc').innerText = k2.desc;
+            document.getElementById('kpi2Gauge').style.background = `conic-gradient(#06b6d4 ${k2.val}%, transparent 0)`;
 
             const planCont = document.getElementById('planContainer');
             planCont.innerHTML = '';
@@ -515,8 +512,8 @@
                 planCont.innerHTML += `
                     <div class="relative flex flex-col md:flex-row gap-8 items-start">
                         <div class="process-dot mt-2 ${colors[i] || colors[0]}"></div>
-                        <div class="bg-slate-50 p-6 rounded-2xl w-full border border-slate-100 hover:bg-white hover:shadow-lg transition">
-                            <h4 class="font-bold text-blue-900 text-lg">${p.title}</h4>
+                        <div class="bg-slate-50 p-6 rounded-2xl w-full border border-slate-100">
+                            <h4 class="font-bold text-blue-900 text-lg uppercase tracking-tight">${p.title}</h4>
                             <p class="text-sm text-slate-600 leading-relaxed mt-2">${p.desc}</p>
                         </div>
                     </div>`;
@@ -526,26 +523,28 @@
         }
 
         function renderCharts(skillsData, pieData) {
+            const chartFont = { family: 'Kanit', size: 10 };
+            
             const radarCtx = document.getElementById('skillsRadarChart').getContext('2d');
             if (skillsChart) skillsChart.destroy();
             skillsChart = new Chart(radarCtx, {
                 type: 'radar',
                 data: {
-                    labels: ["เขียนข่าว", "อินโฟ", "โซเชียล", "วิกฤต", "สรุปงาน", "จริยธรรม"].map(l => formatLabel(l, 10)),
+                    labels: ["เขียนข่าว", "อินโฟ", "โซเชียล", "วิกฤต", "สรุปงาน", "จริยธรรม"],
                     datasets: [{
-                        label: 'Proficiency (%)',
                         data: skillsData,
                         backgroundColor: 'rgba(6, 182, 212, 0.15)',
                         borderColor: '#06b6d4',
                         borderWidth: 3,
                         pointBackgroundColor: '#002D62',
                         pointBorderColor: '#fff',
-                        pointRadius: 5
+                        pointRadius: 4
                     }]
                 },
                 options: {
+                    animation: false, // ปิด Animation เพื่อให้พิมพ์ออกกระดาษได้ทันที
                     maintainAspectRatio: false,
-                    scales: { r: { suggestedMin: 40, suggestedMax: 100, ticks: { display: false } } },
+                    scales: { r: { suggestedMin: 40, suggestedMax: 100, ticks: { display: false }, pointLabels: { font: { family: 'Kanit', size: 11, weight: '600' } } } },
                     plugins: { legend: { display: false } }
                 }
             });
@@ -555,17 +554,17 @@
             pieChart = new Chart(pieCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ["ข่าวประชาสัมพันธ์", "อินโฟกราฟิก", "สื่อมัลติมีเดีย", "งานสนับสนุน"],
+                    labels: ["ข่าวราชการ", "อินโฟกราฟิก", "มัลติมีเดีย", "งานสนับสนุน"],
                     datasets: [{
                         data: pieData,
                         backgroundColor: ['#002D62', '#06b6d4', '#f59e0b', '#cbd5e1'],
-                        borderWidth: 2,
-                        hoverOffset: 15
+                        borderWidth: 2
                     }]
                 },
                 options: {
+                    animation: false,
                     maintainAspectRatio: false,
-                    cutout: '65%',
+                    cutout: '60%',
                     plugins: {
                         legend: { position: 'bottom', labels: { font: { family: 'Kanit', size: 10 } } },
                         datalabels: {
@@ -573,7 +572,7 @@
                             backgroundColor: '#1e293b',
                             borderRadius: 4,
                             padding: 4,
-                            font: { weight: 'bold', size: 11 },
+                            font: { family: 'Kanit', weight: 'bold', size: 11 },
                             formatter: (val, ctx) => {
                                 let sum = 0;
                                 ctx.chart.data.datasets[0].data.forEach(d => sum += d);
@@ -590,7 +589,6 @@
             panel.classList.toggle('hidden');
             if (!panel.classList.contains('hidden')) {
                 const d = window.currentData || getDefaultData();
-                // Populating all inputs for Full CRUD
                 document.getElementById('inName').value = d.personal.name;
                 document.getElementById('inPos').value = d.personal.pos;
                 document.getElementById('inProfileImg').value = d.personal.profileUrl;
@@ -598,40 +596,35 @@
                 document.getElementById('inSlogan').value = d.personal.slogan;
                 document.getElementById('inPhone').value = d.personal.phone;
                 document.getElementById('inEmail').value = d.personal.email;
-                document.getElementById('inConceptSub').value = d.mindset.sub;
-                document.getElementById('inConceptMain').value = d.mindset.main;
-                document.getElementById('inDegree').value = d.education.degree;
-                document.getElementById('inUniv').value = d.education.univ;
-                document.getElementById('inGpa').value = d.education.gpa;
-                document.getElementById('inHonor').value = d.education.honor;
-                document.getElementById('inCourses').value = d.education.courses.join(", ");
+
+                const k1 = d.dashboard.kpi1 || getDefaultData().dashboard.kpi1;
+                const k2 = d.dashboard.kpi2 || getDefaultData().dashboard.kpi2;
+                document.getElementById('ik1L').value = k1.label;
+                document.getElementById('ik1').value = k1.val;
+                document.getElementById('ik1D').value = k1.desc;
+                document.getElementById('ik2L').value = k2.label;
+                document.getElementById('ik2').value = k2.val;
+                document.getElementById('ik2D').value = k2.desc;
+
+                document.getElementById('pie1').value = d.dashboard.pie[0];
+                document.getElementById('pie2').value = d.dashboard.pie[1];
+                document.getElementById('pie3').value = d.dashboard.pie[2];
+                document.getElementById('pie4').value = d.dashboard.pie[3];
+
                 document.getElementById('sk1').value = d.dashboard.skills[0];
                 document.getElementById('sk2').value = d.dashboard.skills[1];
                 document.getElementById('sk3').value = d.dashboard.skills[2];
                 document.getElementById('sk4').value = d.dashboard.skills[3];
                 document.getElementById('sk5').value = d.dashboard.skills[4];
                 document.getElementById('sk6').value = d.dashboard.skills[5];
-                document.getElementById('ik1').value = d.dashboard.kpis[0];
-                document.getElementById('ik2').value = d.dashboard.kpis[1];
-                document.getElementById('pie1').value = d.dashboard.pie[0];
-                document.getElementById('pie2').value = d.dashboard.pie[1];
-                document.getElementById('pie3').value = d.dashboard.pie[2];
-                document.getElementById('pie4').value = d.dashboard.pie[3];
-                document.getElementById('inSoftware').value = d.dashboard.software.join(", ");
-                document.getElementById('plan1T').value = d.plan[0].title;
-                document.getElementById('plan1D').value = d.plan[0].desc;
-                document.getElementById('plan2T').value = d.plan[1].title;
-                document.getElementById('plan2D').value = d.plan[1].desc;
-                document.getElementById('plan3T').value = d.plan[2].title;
-                document.getElementById('plan3D').value = d.plan[2].desc;
             }
         };
 
         window.saveAdminData = async () => {
             if (!currentUser) return;
             const st = document.getElementById('saveStatus');
-            st.innerText = "กำลังซิงค์ข้อมูลลงฐานข้อมูล...";
-            st.className = "text-blue-600 font-bold animate-pulse";
+            st.innerText = "กำลังซิงค์ข้อมูลเข้า Firebase...";
+            st.className = "text-blue-600 font-bold animate-pulse font-kanit";
 
             const newData = {
                 personal: {
@@ -643,46 +636,34 @@
                     phone: document.getElementById('inPhone').value,
                     email: document.getElementById('inEmail').value
                 },
-                mindset: {
-                    sub: document.getElementById('inConceptSub').value,
-                    main: document.getElementById('inConceptMain').value
-                },
-                education: {
-                    degree: document.getElementById('inDegree').value,
-                    univ: document.getElementById('inUniv').value,
-                    gpa: document.getElementById('inGpa').value,
-                    honor: document.getElementById('inHonor').value,
-                    courses: document.getElementById('inCourses').value.split(",").map(s => s.trim()).filter(s => s !== "")
-                },
+                mindset: window.currentData?.mindset || getDefaultData().mindset,
+                education: window.currentData?.education || getDefaultData().education,
                 dashboard: {
                     skills: [
                         parseInt(document.getElementById('sk1').value), parseInt(document.getElementById('sk2').value),
                         parseInt(document.getElementById('sk3').value), parseInt(document.getElementById('sk4').value),
                         parseInt(document.getElementById('sk5').value), parseInt(document.getElementById('sk6').value)
                     ],
-                    kpis: [parseInt(document.getElementById('ik1').value), parseInt(document.getElementById('ik2').value)],
+                    kpi1: { label: document.getElementById('ik1L').value, val: parseInt(document.getElementById('ik1').value), desc: document.getElementById('ik1D').value },
+                    kpi2: { label: document.getElementById('ik2L').value, val: parseInt(document.getElementById('ik2').value), desc: document.getElementById('ik2D').value },
                     pie: [
                         parseInt(document.getElementById('pie1').value), parseInt(document.getElementById('pie2').value),
                         parseInt(document.getElementById('pie3').value), parseInt(document.getElementById('pie4').value)
                     ],
-                    software: document.getElementById('inSoftware').value.split(",").map(s => s.trim()).filter(s => s !== "")
+                    software: window.currentData?.dashboard?.software || ["Canva", "CapCut"]
                 },
-                plan: [
-                    { title: document.getElementById('plan1T').value, desc: document.getElementById('plan1D').value },
-                    { title: document.getElementById('plan2T').value, desc: document.getElementById('plan2D').value },
-                    { title: document.getElementById('plan3T').value, desc: document.getElementById('plan3D').value }
-                ]
+                plan: window.currentData?.plan || getDefaultData().plan
             };
 
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'SrochaPort', 'main_config');
                 await setDoc(docRef, newData);
-                st.innerText = "✅ บันทึกสำเร็จ!";
-                st.className = "text-green-600 font-bold";
+                st.innerText = "✅ บันทึกสำเร็จทุกส่วน!";
+                st.className = "text-green-600 font-bold font-kanit";
                 setTimeout(() => { toggleAdminPanel(); st.innerText = ""; }, 1200);
             } catch (err) {
-                st.innerText = "❌ เกิดข้อผิดพลาด";
-                st.className = "text-red-600 font-bold";
+                st.innerText = "❌ เกิดข้อผิดพลาดในการบันทึก";
+                st.className = "text-red-600 font-bold font-kanit";
             }
         };
 
