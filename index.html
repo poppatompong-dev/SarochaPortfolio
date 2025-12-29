@@ -35,7 +35,6 @@
             header { background: #002D62 !important; color: white !important; }
         }
 
-        /* สำหรับ Admin Panel Scroll */
         #adminPanelContent::-webkit-scrollbar { width: 6px; }
         #adminPanelContent::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -96,6 +95,7 @@
                 <div class="w-72 h-96 rounded-[2.5rem] border-[12px] border-white/10 shadow-2xl overflow-hidden bg-slate-800 relative group">
                     <img id="profileImg" src="https://img5.pic.in.th/file/secure-sv1/Gemini_Generated_Image_5nz7zj5nz7zj5nz7.png" 
                          alt="สโรชา เฮงสุวรรณ" 
+                         onerror="this.src='https://ui-avatars.com/api/?name=Sarocha+H&size=512&background=002D62&color=fff'"
                          class="w-full h-full object-cover object-top transition duration-700 group-hover:scale-110">
                 </div>
             </div>
@@ -236,7 +236,7 @@
                 
                 <!-- ข้อมูลพื้นฐาน -->
                 <div class="space-y-4">
-                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">1. ข้อมูลส่วนตัว (Hero & Footer)</h4>
+                    <h4 class="text-lg font-bold text-blue-800 border-b pb-2">1. ข้อมูลส่วนตัวและรูปโปรไฟล์</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">ชื่อ-นามสกุล</label>
@@ -245,6 +245,10 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">ตำแหน่ง</label>
                             <input id="inPos" type="text" class="w-full border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">ลิงก์ URL รูปโปรไฟล์</label>
+                            <input id="inProfileImg" type="text" class="w-full border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="https://example.com/image.png">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">สโลแกน</label>
@@ -372,9 +376,7 @@
             measurementId: "G-CPQ2L4PKFG"
         };
 
-        // App ID สำหรับโครงสร้าง Path
         const appId = "srochaport-d7a67";
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -382,7 +384,6 @@
         let skillsChart;
         let currentUser = null;
 
-        // ฟังก์ชันจัดระเบียบ Label ของกราฟ
         function formatLabel(str, maxwidth) {
             const sections = [];
             const words = str.split(" ");
@@ -404,10 +405,8 @@
             return sections;
         }
 
-        // เริ่มต้นระบบ
         async function init() {
             try {
-                // พยายามเข้าระบบแบบ Anonymous เพื่อให้เขียนข้อมูลได้ตามกฎ Rules
                 await signInAnonymously(auth);
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
@@ -421,10 +420,8 @@
             }
         }
 
-        // ติดตามข้อมูลจาก Firestore แบบ Real-time
         function listenToData() {
             if (!currentUser) return;
-            // เส้นทาง: /artifacts/srochaport-d7a67/public/data/SrochaPort/main_config
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'SrochaPort', 'main_config');
             onSnapshot(docRef, (snapshot) => {
                 const data = snapshot.exists() ? snapshot.data() : getDefaultData();
@@ -436,7 +433,6 @@
             });
         }
 
-        // ข้อมูลเริ่มต้นกรณีไม่มีในฐานข้อมูล
         function getDefaultData() {
             return {
                 personal: {
@@ -444,7 +440,8 @@
                     pos: "นักประชาสัมพันธ์ปฏิบัติการ (อปท. ยุคใหม่)",
                     slogan: "\"นักสื่อสารรุ่นใหม่ หัวใจบริการประชาชน\"",
                     phone: "084-050-3121",
-                    email: "kwangsaro.31@gmail.com"
+                    email: "kwangsaro.31@gmail.com",
+                    profileUrl: "https://img5.pic.in.th/file/secure-sv1/Gemini_Generated_Image_5nz7zj5nz7zj5nz7.png"
                 },
                 mindset: {
                     sub: "\"งานประชาสัมพันธ์ไม่ใช่แค่การพูดให้ดัง แต่คือการพูดให้คนเข้าใจ...\"",
@@ -470,51 +467,56 @@
             };
         }
 
-        // อัปเดต UI ทั้งหมด
         function updateUI(data) {
-            // Personal
-            document.getElementById('userNameDisplay').innerHTML = data.personal.name.replace(" ", " <span class='text-cyan-400'>");
+            // Personal & Profile Image
+            const personal = data.personal || getDefaultData().personal;
+            document.getElementById('userNameDisplay').innerHTML = personal.name.replace(" ", " <span class='text-cyan-400'>");
             document.getElementById('userNameDisplay').innerHTML += "</span>";
-            document.getElementById('navTitle').innerText = (data.personal.name.split(" ")[0] + ".Portfolio").toUpperCase();
-            document.getElementById('footerName').innerText = data.personal.name;
-            document.getElementById('positionLabel').innerText = data.personal.pos;
-            document.getElementById('sloganDisplay').innerText = data.personal.slogan;
-            document.getElementById('phoneDisplay').innerText = data.personal.phone;
-            document.getElementById('emailDisplay').innerText = data.personal.email;
+            document.getElementById('navTitle').innerText = (personal.name.split(" ")[0] + ".Portfolio").toUpperCase();
+            document.getElementById('footerName').innerText = personal.name;
+            document.getElementById('positionLabel').innerText = personal.pos;
+            document.getElementById('sloganDisplay').innerText = personal.slogan;
+            document.getElementById('phoneDisplay').innerText = personal.phone;
+            document.getElementById('emailDisplay').innerText = personal.email;
+            document.getElementById('profileImg').src = personal.profileUrl || "https://img5.pic.in.th/file/secure-sv1/Gemini_Generated_Image_5nz7zj5nz7zj5nz7.png";
 
             // Mindset
-            document.getElementById('conceptSub').innerText = data.mindset.sub;
-            document.getElementById('conceptMain').innerText = data.mindset.main;
+            const mindset = data.mindset || getDefaultData().mindset;
+            document.getElementById('conceptSub').innerText = mindset.sub;
+            document.getElementById('conceptMain').innerText = mindset.main;
 
             // Edu
-            document.getElementById('universityDisplay').innerText = data.education.univ;
-            document.getElementById('degreeDisplay').innerText = data.education.degree;
-            document.getElementById('gpaDisplay').innerText = data.education.gpa;
-            document.getElementById('honorDisplay').innerText = data.education.honor;
+            const edu = data.education || getDefaultData().education;
+            document.getElementById('universityDisplay').innerText = edu.univ;
+            document.getElementById('degreeDisplay').innerText = edu.degree;
+            document.getElementById('gpaDisplay').innerText = edu.gpa;
+            document.getElementById('honorDisplay').innerText = edu.honor;
             
             const coursesContainer = document.getElementById('coursesList');
             coursesContainer.innerHTML = '';
-            (data.education.courses || []).forEach(c => {
+            (edu.courses || []).forEach(c => {
                 coursesContainer.innerHTML += `<div class="bg-white p-3 rounded-xl shadow-sm text-xs font-bold text-slate-700 border border-slate-200">${c}</div>`;
             });
 
             // Software
+            const dashboard = data.dashboard || getDefaultData().dashboard;
             const swContainer = document.getElementById('softwareList');
             swContainer.innerHTML = '';
-            (data.dashboard.software || []).forEach(s => {
+            (dashboard.software || []).forEach(s => {
                 swContainer.innerHTML += `<span class="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-xs font-bold">${s}</span>`;
             });
 
             // KPIs
-            document.getElementById('kpi1Val').innerText = data.dashboard.kpis[0] + '%';
-            document.getElementById('kpi2Val').innerText = data.dashboard.kpis[1] + '%';
-            document.getElementById('kpi1Gauge').style.background = `conic-gradient(#002D62 ${data.dashboard.kpis[0]}%, transparent 0)`;
-            document.getElementById('kpi2Gauge').style.background = `conic-gradient(#06b6d4 ${data.dashboard.kpis[1]}%, transparent 0)`;
+            document.getElementById('kpi1Val').innerText = dashboard.kpis[0] + '%';
+            document.getElementById('kpi2Val').innerText = dashboard.kpis[1] + '%';
+            document.getElementById('kpi1Gauge').style.background = `conic-gradient(#002D62 ${dashboard.kpis[0]}%, transparent 0)`;
+            document.getElementById('kpi2Gauge').style.background = `conic-gradient(#06b6d4 ${dashboard.kpis[1]}%, transparent 0)`;
 
             // Plan
+            const plan = data.plan || getDefaultData().plan;
             const planContainer = document.getElementById('planContainer');
             planContainer.innerHTML = '';
-            (data.plan || []).forEach((p, idx) => {
+            plan.forEach((p, idx) => {
                 const colors = ['bg-blue-900', 'bg-cyan-500', 'bg-amber-500'];
                 planContainer.innerHTML += `
                     <div class="relative flex flex-col md:flex-row gap-8 items-start">
@@ -526,10 +528,9 @@
                     </div>`;
             });
 
-            renderChart(data.dashboard.skills);
+            renderChart(dashboard.skills);
         }
 
-        // วาดกราฟ Skills
         function renderChart(skillsData) {
             const ctx = document.getElementById('skillsRadarChart').getContext('2d');
             if (skillsChart) skillsChart.destroy();
@@ -579,15 +580,14 @@
             });
         }
 
-        // สลับเปิด/ปิด Admin Panel
         window.toggleAdminPanel = () => {
             const panel = document.getElementById('adminPanel');
             panel.classList.toggle('hidden');
             if (!panel.classList.contains('hidden')) {
                 const d = window.currentData || getDefaultData();
-                // Load inputs
                 document.getElementById('inName').value = d.personal.name;
                 document.getElementById('inPos').value = d.personal.pos;
+                document.getElementById('inProfileImg').value = d.personal.profileUrl;
                 document.getElementById('inSlogan').value = d.personal.slogan;
                 document.getElementById('inPhone').value = d.personal.phone;
                 document.getElementById('inEmail').value = d.personal.email;
@@ -616,7 +616,6 @@
             }
         };
 
-        // บันทึกข้อมูลแบบ CRUD
         window.saveAdminData = async () => {
             if (!currentUser) return;
             const status = document.getElementById('saveStatus');
@@ -627,6 +626,7 @@
                 personal: {
                     name: document.getElementById('inName').value,
                     pos: document.getElementById('inPos').value,
+                    profileUrl: document.getElementById('inProfileImg').value,
                     slogan: document.getElementById('inSlogan').value,
                     phone: document.getElementById('inPhone').value,
                     email: document.getElementById('inEmail').value
